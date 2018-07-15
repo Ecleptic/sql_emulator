@@ -1,16 +1,3 @@
-const testInput1 = 'select * from DATA1'
-const testInput2 = 'select users from DATA1'
-const testInput3 = 'select users, places from TABLE1'
-const updateInput1 =
-    "UPDATE TABLE1 SET users = 'Alfred Schmidt', places = 'Frankfurt' WHERE id = 1;"
-const updateInput2 =
-    "UPDATE TABLE1 SET users = 'bobby', places = 'taiwan' WHERE places = Seoul;"
-
-const deleteInput1 = "DELETE FROM DATA1 WHERE users = 'Doctor';"
-const deleteInput2 = "DELETE FROM DATA1 WHERE users = 'Cameron';"
-
-const createInput1 =
-    'CREATE TABLE Persons (PersonID int, LastName varchar(255), FirstName varchar(255), Address varchar(255), City varchar(255) );'
 
 let db = {
     TABLE1: {
