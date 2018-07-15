@@ -1,23 +1,29 @@
-import React, { Component } from "react"
+import React, { Component, Fragment } from 'react'
 
-import parse from "./parser"
+import MyTable from './MyTable'
+import parse from './parser'
 
-export class App extends Component {
+export default class App extends Component {
     constructor(props) {
         super(props)
         this.state = {
             tokens: {
-                SELECT: false,
-                UPDATE: false,
-                DELETE: false,
-                INSERT: false,
                 CREATE: false,
-                ALTER: false,
-                DROP: false
+                DELETE: false,
+                DROP: false,
+                INSERT: false,
+                SELECT: false,
+                UPDATE: false
             },
-            sqlInput: "",
-            sqlError: false
+            sqlInput: '',
+            sqlError: false,
+            db: {},
+            viewedInfo: {}
         }
+    }
+    componentDidMount = () => {
+        const db = parse('CREATE TABLE hello;')
+        this.setState({ db })
     }
     inputUpdate = event => {
         this.setState(prevState => {
@@ -28,20 +34,6 @@ export class App extends Component {
         let truthyToken = {
             ...this.state.tokens
         }
-        const val = parse(event.target.value)
-        if (val !== undefined) {
-            // console.log(val)
-            // console.log(truthyToken[val])
-            truthyToken[val] = !truthyToken[val]
-            this.setState({ tokens: truthyToken })
-        } else {
-            for (const i in truthyToken) {
-                truthyToken[i] = false
-            }
-            this.setState({ tokens: truthyToken })
-        }
-
-        // this.setState({ tokens: truthyToken })
     }
 
     render() {
@@ -60,26 +52,42 @@ export class App extends Component {
                         this.setState({ sqlInput: event.target.value })
                     }}
                 />
+                <button
+                    onClick={() => {
+                        const db = parse(this.state.sqlInput)
+                        this.setState({ db })
+                    }}
+                >
+                    Run
+                </button>
                 <br />
-                <h3>Which key is in the beginning: </h3>
+                <h3>TABLES:</h3>
                 <ul>
-                    {Object.keys(this.state.tokens).map(token => {
+                    {Object.keys(this.state.db).map(table => {
                         return (
-                            <li key={token}>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={this.state.tokens[token]}
-                                    />
-                                    {token}
-                                </label>
+                            <li key={table}>
+                                <button
+                                    onClick={() => {
+                                        const viewedInfo = {
+                                            data: this.state.db[table],
+                                            table
+                                        }
+                                        this.setState({ viewedInfo })
+                                    }}
+                                >
+                                    {table}
+                                </button>
                             </li>
                         )
                     })}
                 </ul>
+                {this.state.viewedInfo.table ? (
+                    <Fragment>
+                        <h4>Table Name: {this.state.viewedInfo.table}</h4>
+                        <MyTable data={this.state.viewedInfo.data} />
+                    </Fragment>
+                ) : null}
             </div>
         )
     }
 }
-
-export default App
