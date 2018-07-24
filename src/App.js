@@ -1,7 +1,45 @@
 import React, { Component, Fragment } from 'react'
+import styled from 'styled-components'
 
 import MyTable from './MyTable'
 import parse from './parser'
+
+const TextArea = styled.textarea`
+    /* display: flex; */
+    width: 600px;
+    height: 200px;
+    /* justify-self: center;
+    align-self: center; */
+    font-size: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+`
+
+const Container = styled.div`
+    display: flex;
+    flex-direction: column;
+    padding: 3rem;
+    display: inline-block;
+`
+
+const SubmitButton = styled.button`
+    margin: 1rem;
+    border: 1px solid #cccccc;
+    border-color: #0293f8;
+    color: #ffffff;
+    background-color: #0293f8;
+    padding: 20px;
+
+    &:hover {
+        background: rgba(1, 42, 71, 0.8);
+        box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2),
+            0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+`
+
+const ErrorHeader = styled.h1`
+    color: red;
+`
 
 export default class App extends Component {
     constructor(props) {
@@ -38,28 +76,31 @@ export default class App extends Component {
 
     render() {
         return (
-            <div>
+            <Container>
                 {this.state.sqlError && (
                     <div>
-                        <h1>SQL Error:</h1>
-                        <h3>More info will be added later.</h3>
+                        <ErrorHeader>SQL Error</ErrorHeader>
                     </div>
                 )}
-                <textarea
+                <TextArea
                     value={this.state.sqlInput}
                     onChange={event => {
                         this.inputUpdate(event)
                         this.setState({ sqlInput: event.target.value })
                     }}
                 />
-                <button
+                <SubmitButton
                     onClick={() => {
-                        const db = parse(this.state.sqlInput)
-                        this.setState({ db })
+                        try {
+                            const db = parse(this.state.sqlInput)
+                            this.setState({ db })
+                        } catch (error) {
+                            this.setState({ sqlError: true })
+                        }
                     }}
                 >
                     Run
-                </button>
+                </SubmitButton>
                 <br />
                 <h3>TABLES:</h3>
                 <ul>
@@ -87,7 +128,7 @@ export default class App extends Component {
                         <MyTable data={this.state.viewedInfo.data} />
                     </Fragment>
                 ) : null}
-            </div>
+            </Container>
         )
     }
 }

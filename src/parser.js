@@ -1,27 +1,10 @@
-
 let db = {
-    TABLE1: {
+    EXAMPLETABLE1: {
         id: 1,
         users: ['Cameron', 'Green', 'Stian', 'Bing', 'Doctor', 'Keith'],
         places: ['Boston', 'Dallas', 'New York', 'Seoul', 'Shanghai', 'Tokyo'],
         DataTypes: { users: 'STRING', places: 'STRING' }
-    },
-    DATA2: { id: 2, DataTypes: {} },
-    DATA3: { id: 3, DataTypes: {} },
-    DATA1: {
-        id: 5,
-        users: [
-            'Cameron',
-            'Green',
-            'Stian',
-            'Cronje',
-            'Bing',
-            'Doctor',
-            'Keith'
-        ],
-        DataTypes: {}
-    },
-    DATA4: { id: 4 }
+    }
 }
 
 const tokenList = [
@@ -84,8 +67,12 @@ export default function parse(input) {
             case 'UPDATE':
                 updateTable(query)
                 break
+            case 'INSERT':
+                insertTable(query)
+                break
             default:
-                console.error('not select')
+                console.error('Unknown Command')
+                throw 'unknown command'
                 break
         }
     }
@@ -220,7 +207,7 @@ function createTable(query) {
         return null
         // createDB(query)
     }
-    const prompt = `
+    const ExamplePrompt = `
     CREATE TABLE Persons (
         PersonID int,
         LastName varchar(255),
@@ -253,9 +240,10 @@ function createTable(query) {
         dataTypesToAdd.length - 1
     ].slice(0, -1)
 
-    // console.log('dataTypesToAdd', dataTypesToAdd)
+    console.log('dataTypesToAdd', dataTypesToAdd)
 
     dataTypesToAdd.forEach(element => {
+        element = element.replace(/\r?\n|\r/g, '')
         const values = element.split(' ').filter(val => val)
         const dataParam = values[0]
         const type = values[1]
@@ -303,6 +291,69 @@ function updateTable(query) {
         db[tableName][column][whereToSlicePlace] = replacement
     })
 
+    console.log(
+        '%cDB Now:',
+        'background: #222; color: #bada55; font-size:1.5rem;',
+        db
+    )
+}
+function removeParens(input) {
+    if (input[0][0] === '(') {
+        input[0] = input[0].slice(1)
+    }
+
+    if (input[input.length - 1][input[input.length - 1].length - 1] === ')') {
+        input[input.length - 1] = input[input.length - 1].slice(0, -1)
+    }
+    if (input[0][0] === "'" || input[0][0] === '"') {
+        input[0] = input[0].slice(1)
+    }
+
+    if (
+        input[input.length - 1][input[input.length - 1].length - 1] === '"' ||
+        input[input.length - 1][input[input.length - 1].length - 1] === "'"
+    ) {
+        input[input.length - 1] = input[input.length - 1].slice(0, -1)
+    }
+
+    // input = input.replace("(^')|('$)")
+
+    input = input.join(' ').split(', ')
+    console.log(input)
+    // let clean = e.replace('/[.,s]/g', '')
+    // clean = e.replace('/[.,s]/g', '')
+
+    return input
+}
+
+function insertTable(query) {
+    /**
+
+        CREATE TABLE Persons (
+        PersonID int,
+        LastName varchar(255),
+        FirstName varchar(255),
+        Address varchar(255),
+        City varchar(255)
+    );
+
+    INSERT INTO Persons (PersonID, LastName, FirstName, Address, City) VALUES (1234, 'Erichsen', 'Ted',  '4006 Norway Drive', 'New York');
+     */
+
+    const tableName = query[2]
+    const valuesPlace = query.indexOf('VALUES')
+    // const sliced = query.slice(3, wherePlace).join(' ')
+
+    const keysArray = query.slice(3, valuesPlace)
+    const valsArray = query.slice(valuesPlace + 1)
+
+    const newKeys = removeParens(keysArray)
+    const newVals = removeParens(valsArray)
+
+    newKeys.forEach((element, index) => {
+        console.log(db[tableName.toUpperCase()][element])
+        db[tableName.toUpperCase()][element].push(newVals[index])
+    })
     console.log(
         '%cDB Now:',
         'background: #222; color: #bada55; font-size:1.5rem;',
