@@ -82,6 +82,18 @@ export default class App extends Component {
                         <ErrorHeader>SQL Error</ErrorHeader>
                     </div>
                 )}
+                <div>
+                    <h3>Currently Supported Commands:</h3>
+                    <ul>
+                        <li>create</li>
+                        <li>delete</li>
+                        <li>drop</li>
+                        <li>select</li>
+                        <li>truncate</li>
+                        <li>update</li>
+                        <li>insert</li>
+                    </ul>
+                </div>
                 <TextArea
                     value={this.state.sqlInput}
                     onChange={event => {
