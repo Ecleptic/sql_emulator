@@ -2,7 +2,8 @@ import React, { Component, Fragment } from 'react'
 import styled from 'styled-components'
 
 import MyTable from './MyTable'
-import parse from '../Scripts/parser'
+import parse, { getDbFromParser, getTable } from '../Scripts/parser'
+import { isSelect, getTableName,splitStrings } from '../Scripts/utilityFuncs'
 
 const TextArea = styled.textarea`
     /* display: flex; */
@@ -60,7 +61,7 @@ export default class App extends Component {
         }
     }
     componentDidMount = () => {
-        const db = parse('CREATE TABLE hello;')//TODO: should be a select
+        const db = getDbFromParser()
         this.setState({ db })
     }
     inputUpdate = event => {
@@ -93,8 +94,7 @@ export default class App extends Component {
                         <li>update</li>
                         <li>insert</li>
                     </ul>
-                    <h3>
-                        Please separate every word with a space</h3>
+                    <h3>Please separate every word with a space</h3>
                 </div>
                 <TextArea
                     value={this.state.sqlInput}
@@ -106,8 +106,15 @@ export default class App extends Component {
                 <SubmitButton
                     onClick={() => {
                         try {
-                            const db = parse(this.state.sqlInput)
-                            this.setState({ db })
+                            if (isSelect(this.state.sqlInput)) {
+                                const data = getTable(this.state.sqlInput)
+                                const table = getTableName(splitStrings(this.state.sqlInput))
+                                const viewedInfo = { data, table }
+                                this.setState({ viewedInfo })
+                            } else {
+                                const db = parse(this.state.sqlInput)
+                                this.setState({ db })
+                            }
                         } catch (error) {
                             this.setState({ sqlError: true })
                         }

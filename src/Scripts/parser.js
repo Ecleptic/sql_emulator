@@ -306,7 +306,8 @@ function removeParens(input) {
     return input
 }
 
-function getTable(query) {
+export function getTable(input) {
+    const query = splitStrings(input)
     const final = query
         .join(' ')
         .toUpperCase()
@@ -369,4 +370,8 @@ function getTable(query) {
 
 function getTableInfo(item, table) {
     return table.item
+}
+
+export function getDbFromParser() {
+    return db
 }

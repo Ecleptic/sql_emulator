@@ -6,6 +6,7 @@ export function getTableName(query) {
         .toUpperCase()
         .split(' ')
         .indexOf('FROM')
+        console.log(fromPlace)
     const tableName = fromPlace !== -1 ? query[fromPlace + 1] : query[1]
     return tableName
 }
@@ -13,7 +14,7 @@ export function getTableName(query) {
 export function getIndexOfString(string, query) {
     let place = -1
     const capsQuery = query.map(str => str.toUpperCase())
-    place = query.indexOf(string.toUpperCase())
+    place = capsQuery.indexOf(string.toUpperCase())
 
     return place
 }
@@ -33,4 +34,13 @@ export function splitStrings(input) {
 
     const final = removedQuotes.filter(val => val)
     return final
+}
+
+export function isSelect(input) {
+    const split = splitStrings(input)
+    const index = getIndexOfString('select', split)
+    if (index === 0) {
+        return true
+    }
+    return false
 }

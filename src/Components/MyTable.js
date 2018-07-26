@@ -25,7 +25,7 @@ const MyTable = ({ data }) => {
                 tableNames.push(key)
             }
         })
-        console.log(tableItems)
+        // console.log(tableItems)
         if (!tableItems[0]) return null
         // Outer loop to create parent
         for (let i = 0; i < tableItems[0].length; i++) {
