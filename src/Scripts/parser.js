@@ -1,3 +1,4 @@
+import { getTableName, getIndexOfString, splitStrings } from './utilityFuncs'
 let db = {
     EXAMPLETABLE1: {
         id: 1,
@@ -39,7 +40,14 @@ const KEYWORDS = [
 export default function parse(input) {
     // only parse the first command for now.
     const firstInput = input.split(';')
-    const query = firstInput[0].split(' ').filter(val => val)
+
+    const query = splitStrings(firstInput[0])
+
+    // const query = firstInput[0]
+    //     .split(/\n/)
+    //     .join(' ')
+    //     .split(' ')
+    //     .filter(val => val)
 
     console.log(
         '%cQuery:',
@@ -58,6 +66,9 @@ export default function parse(input) {
             case 'DROP':
                 dropTable(query)
                 break
+            case 'INSERT':
+                insertTable(query)
+                break
             case 'SELECT':
                 getTable(query)
                 break
@@ -66,9 +77,6 @@ export default function parse(input) {
                 break
             case 'UPDATE':
                 updateTable(query)
-                break
-            case 'INSERT':
-                insertTable(query)
                 break
             default:
                 console.error('Unknown Command')
@@ -81,8 +89,11 @@ export default function parse(input) {
 function deleteTable(query) {
     // DELETE FROM `TABLENAME` WHERE `CONDITION`;
     const tableName = getTableName(query)
-    const wherePlace = query.indexOf('WHERE')
-    const sliced = query.slice(3, wherePlace).join(' ')
+    const wherePlace = getIndexOfString('where', query)
+    if (wherePlace === -1) {
+        console.error("cannot find 'where' in query")
+    }
+    // const sliced = query.slice(3, wherePlace).join(' ')
 
     const whereToSlice = query.slice(wherePlace + 1).join(' ')
     const whereToSliceColumnName = whereToSlice.split('=')[0].trim()
@@ -129,6 +140,172 @@ function truncateTable(query) {
         db
     )
 }
+function createTable(query) {
+    if (query[1].toUpperCase() !== 'TABLE') {
+        return null
+        // createDB(query)
+    }
+    const ExamplePrompt = `
+    CREATE TABLE Persons (
+        PersonID int,
+        LastName varchar(255),
+        FirstName varchar(255),
+        Address varchar(255),
+        City varchar(255)
+    );
+`
+    const name = query[2].toUpperCase()
+
+    // const name = newTableName.toUpperCase()
+    if (!db[name]) {
+        db[name] = {}
+        db[name].id = Object.keys(db).length
+        db[name].DataTypes = {}
+    } else {
+        console.error("Can't create.")
+    }
+    if (query.length < 4) {
+        return
+    }
+    const dataTypesToAdd = query
+        .slice(3)
+        .join(' ')
+        .split(',')
+
+    // remove leading and trailing parenthesis.
+    dataTypesToAdd[0] = dataTypesToAdd[0].slice(1)
+    dataTypesToAdd[dataTypesToAdd.length - 1] = dataTypesToAdd[
+        dataTypesToAdd.length - 1
+    ].slice(0, -1)
+
+    console.log('dataTypesToAdd', dataTypesToAdd)
+
+    dataTypesToAdd.forEach(element => {
+        element = element.replace(/\r?\n|\r/g, '')
+        const values = element.split(' ').filter(val => val)
+        const dataParam = values[0]
+        const type = values[1]
+
+        db[name]['DataTypes'][dataParam] = type
+        db[name][dataParam] = []
+    })
+
+    console.log(
+        '%cDB Now:',
+        'background: #222; color: #bada55; font-size:1.5rem;',
+        db
+    )
+}
+function updateTable(query) {
+    // "UPDATE TABLE1 SET users = 'Alfred Schmidt', places = 'Frankfurt' WHERE id = 1;"
+    // console.log('update', query)
+    const tableName = getTableName(query)
+    const wherePlace = getIndexOfString('where', query)
+    if (wherePlace === -1) {
+        console.error("cannot find 'where' in query")
+    }
+    const sliced = query.slice(3, wherePlace).join(' ')
+
+    const whereToSlice = query.slice(wherePlace + 1).join(' ')
+    const whereToSliceColumnName = whereToSlice.split('=')[0].trim()
+
+    // Assuming a number
+    let whereToSlicePlace = whereToSlice
+        .split('=')[1]
+        .replace(/'/gm, '')
+        .trim()
+
+    sliced.split(',').forEach(element => {
+        const column = element
+            .split('=')[0]
+            .trim()
+            .toLowerCase()
+        const replacement = element
+            .split('=')[1]
+            .replace(/'/gm, '')
+            .trim()
+        if (isNaN(whereToSlicePlace)) {
+            whereToSlicePlace = db[tableName][whereToSliceColumnName].indexOf(
+                whereToSlicePlace
+            )
+        }
+        db[tableName][column][whereToSlicePlace] = replacement
+    })
+
+    console.log(
+        '%cDB Now:',
+        'background: #222; color: #bada55; font-size:1.5rem;',
+        db
+    )
+}
+function insertTable(query) {
+    /**
+
+        CREATE TABLE Persons (
+        PersonID int,
+        LastName varchar(255),
+        FirstName varchar(255),
+        Address varchar(255),
+        City varchar(255)
+    );
+
+    INSERT INTO Persons (PersonID, LastName, FirstName, Address, City) VALUES (1234, 'Erichsen', 'Ted',  '4006 Norway Drive', 'New York');
+     */
+
+    const tableName = query[2]
+    // const valuesPlace = query.indexOf('VALUES')
+    const valuesPlace = getIndexOfString('values', query)
+    if (valuesPlace === -1) {
+        console.error("cannot find 'values' in query")
+    }
+    // if(values)TODO: make values not necessarily upper case
+    // const sliced = query.slice(3, wherePlace).join(' ')
+
+    const keysArray = query.slice(3, valuesPlace)
+    const valsArray = query.slice(valuesPlace + 1)
+
+    const newKeys = removeParens(keysArray)
+    const newVals = removeParens(valsArray)
+
+    newKeys.forEach((element, index) => {
+        console.log(db[tableName.toUpperCase()][element])
+        db[tableName.toUpperCase()][element].push(newVals[index])
+    })
+    console.log(
+        '%cDB Now:',
+        'background: #222; color: #bada55; font-size:1.5rem;',
+        db
+    )
+}
+function removeParens(input) {
+    if (input[0][0] === '(') {
+        input[0] = input[0].slice(1)
+    }
+
+    if (input[input.length - 1][input[input.length - 1].length - 1] === ')') {
+        input[input.length - 1] = input[input.length - 1].slice(0, -1)
+    }
+    if (input[0][0] === "'" || input[0][0] === '"') {
+        input[0] = input[0].slice(1)
+    }
+
+    if (
+        input[input.length - 1][input[input.length - 1].length - 1] === '"' ||
+        input[input.length - 1][input[input.length - 1].length - 1] === "'"
+    ) {
+        input[input.length - 1] = input[input.length - 1].slice(0, -1)
+    }
+
+    // input = input.replace("(^')|('$)")
+
+    input = input.join(' ').split(', ')
+    console.log(input)
+    // let clean = e.replace('/[.,s]/g', '')
+    // clean = e.replace('/[.,s]/g', '')
+
+    return input
+}
+
 function getTable(query) {
     const final = query
         .join(' ')
@@ -192,171 +369,4 @@ function getTable(query) {
 
 function getTableInfo(item, table) {
     return table.item
-}
-function getTableName(query) {
-    const fromPlace = query
-        .join(' ')
-        .toUpperCase()
-        .split(' ')
-        .indexOf('FROM')
-    const tableName = fromPlace !== -1 ? query[fromPlace + 1] : query[1]
-    return tableName
-}
-function createTable(query) {
-    if (query[1].toUpperCase() !== 'TABLE') {
-        return null
-        // createDB(query)
-    }
-    const ExamplePrompt = `
-    CREATE TABLE Persons (
-        PersonID int,
-        LastName varchar(255),
-        FirstName varchar(255),
-        Address varchar(255),
-        City varchar(255)
-    );
-`
-    const name = query[2].toUpperCase()
-
-    // const name = newTableName.toUpperCase()
-    if (!db[name]) {
-        db[name] = {}
-        db[name].id = Object.keys(db).length
-        db[name].DataTypes = {}
-    } else {
-        console.error("Can't create.")
-    }
-    if (query.length < 4) {
-        return
-    }
-    const dataTypesToAdd = query
-        .slice(3)
-        .join(' ')
-        .split(',')
-
-    // remove leading and trailing parenthesis.
-    dataTypesToAdd[0] = dataTypesToAdd[0].slice(1)
-    dataTypesToAdd[dataTypesToAdd.length - 1] = dataTypesToAdd[
-        dataTypesToAdd.length - 1
-    ].slice(0, -1)
-
-    console.log('dataTypesToAdd', dataTypesToAdd)
-
-    dataTypesToAdd.forEach(element => {
-        element = element.replace(/\r?\n|\r/g, '')
-        const values = element.split(' ').filter(val => val)
-        const dataParam = values[0]
-        const type = values[1]
-
-        db[name]['DataTypes'][dataParam] = type
-        db[name][dataParam] = []
-    })
-
-    console.log(
-        '%cDB Now:',
-        'background: #222; color: #bada55; font-size:1.5rem;',
-        db
-    )
-}
-function updateTable(query) {
-    // "UPDATE TABLE1 SET users = 'Alfred Schmidt', places = 'Frankfurt' WHERE id = 1;"
-    // console.log('update', query)
-    const tableName = getTableName(query)
-    const wherePlace = query.indexOf('WHERE')
-    const sliced = query.slice(3, wherePlace).join(' ')
-
-    const whereToSlice = query.slice(wherePlace + 1).join(' ')
-    const whereToSliceColumnName = whereToSlice.split('=')[0].trim()
-
-    // Assuming a number
-    let whereToSlicePlace = whereToSlice
-        .split('=')[1]
-        .replace(/'/gm, '')
-        .trim()
-
-    sliced.split(',').forEach(element => {
-        const column = element
-            .split('=')[0]
-            .trim()
-            .toLowerCase()
-        const replacement = element
-            .split('=')[1]
-            .replace(/'/gm, '')
-            .trim()
-        if (isNaN(whereToSlicePlace)) {
-            whereToSlicePlace = db[tableName][whereToSliceColumnName].indexOf(
-                whereToSlicePlace
-            )
-        }
-        db[tableName][column][whereToSlicePlace] = replacement
-    })
-
-    console.log(
-        '%cDB Now:',
-        'background: #222; color: #bada55; font-size:1.5rem;',
-        db
-    )
-}
-function removeParens(input) {
-    if (input[0][0] === '(') {
-        input[0] = input[0].slice(1)
-    }
-
-    if (input[input.length - 1][input[input.length - 1].length - 1] === ')') {
-        input[input.length - 1] = input[input.length - 1].slice(0, -1)
-    }
-    if (input[0][0] === "'" || input[0][0] === '"') {
-        input[0] = input[0].slice(1)
-    }
-
-    if (
-        input[input.length - 1][input[input.length - 1].length - 1] === '"' ||
-        input[input.length - 1][input[input.length - 1].length - 1] === "'"
-    ) {
-        input[input.length - 1] = input[input.length - 1].slice(0, -1)
-    }
-
-    // input = input.replace("(^')|('$)")
-
-    input = input.join(' ').split(', ')
-    console.log(input)
-    // let clean = e.replace('/[.,s]/g', '')
-    // clean = e.replace('/[.,s]/g', '')
-
-    return input
-}
-
-function insertTable(query) {
-    /**
-
-        CREATE TABLE Persons (
-        PersonID int,
-        LastName varchar(255),
-        FirstName varchar(255),
-        Address varchar(255),
-        City varchar(255)
-    );
-
-    INSERT INTO Persons (PersonID, LastName, FirstName, Address, City) VALUES (1234, 'Erichsen', 'Ted',  '4006 Norway Drive', 'New York');
-     */
-
-    const tableName = query[2]
-    const valuesPlace = query.indexOf('VALUES')
-    // const sliced = query.slice(3, wherePlace).join(' ')
-
-    const keysArray = query.slice(3, valuesPlace)
-    const valsArray = query.slice(valuesPlace + 1)
-
-    const newKeys = removeParens(keysArray)
-    const newVals = removeParens(valsArray)
-
-    newKeys.forEach((element, index) => {
-        console.log(db[tableName.toUpperCase()][element])
-        db[tableName.toUpperCase()][element].push(newVals[index])
-    })
-    console.log(
-        '%cDB Now:',
-        'background: #222; color: #bada55; font-size:1.5rem;',
-        db
-    )
 }

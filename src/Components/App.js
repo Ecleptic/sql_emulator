@@ -2,7 +2,7 @@ import React, { Component, Fragment } from 'react'
 import styled from 'styled-components'
 
 import MyTable from './MyTable'
-import parse from './parser'
+import parse from '../Scripts/parser'
 
 const TextArea = styled.textarea`
     /* display: flex; */
@@ -60,7 +60,7 @@ export default class App extends Component {
         }
     }
     componentDidMount = () => {
-        const db = parse('CREATE TABLE hello;')
+        const db = parse('CREATE TABLE hello;')//TODO: should be a select
         this.setState({ db })
     }
     inputUpdate = event => {
@@ -93,6 +93,8 @@ export default class App extends Component {
                         <li>update</li>
                         <li>insert</li>
                     </ul>
+                    <h3>
+                        Please separate every word with a space</h3>
                 </div>
                 <TextArea
                     value={this.state.sqlInput}
