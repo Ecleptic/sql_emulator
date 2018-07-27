@@ -1,4 +1,4 @@
-;('use-strict')
+'use-strict'
 
 export function getTableName(query) {
     const fromPlace = query
@@ -6,7 +6,7 @@ export function getTableName(query) {
         .toUpperCase()
         .split(' ')
         .indexOf('FROM')
-        console.log(fromPlace)
+    console.log(fromPlace)
     const tableName = fromPlace !== -1 ? query[fromPlace + 1] : query[1]
     return tableName
 }
@@ -23,12 +23,27 @@ export function splitStrings(input) {
     const equalsAccountedFor = input.split('=').join(' = ')
     const commaAccountedFor = equalsAccountedFor.split(',').join(' ')
     const newlineAccountedFor = commaAccountedFor.split(/\n/).join(' ')
-    const stringsAccountedFor = newlineAccountedFor.match(
+    const varcharAccountedFor = newlineAccountedFor
+        .split(' ')
+        .reduce((obj, item) => {
+            if (item.length > 0) {
+                if (item.includes('varchar')) {
+                    item = '"' + item + '"'
+                }
+                obj = obj +" "+ item
+            }
+            return obj
+        }, '')
+
+    const stringsAccountedFor = varcharAccountedFor.match(
         /\w+|"[^"]*"|=|\*|'[^']*'|`[^`]*`/g
     )
+
     const removedQuotes = stringsAccountedFor
-        .join('^&*==') //there... might be a better way somewhere.
+        .join('^&*==') // there... might be a better way somewhere.
         .split("'")
+        .join('^&*==')
+        .split('"')
         .join('^&*==')
         .split('^&*==')
 

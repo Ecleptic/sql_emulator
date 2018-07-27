@@ -156,7 +156,6 @@ function createTable(query) {
 `
     const name = query[2].toUpperCase()
 
-    // const name = newTableName.toUpperCase()
     if (!db[name]) {
         db[name] = {}
         db[name].id = Object.keys(db).length
@@ -167,28 +166,18 @@ function createTable(query) {
     if (query.length < 4) {
         return
     }
-    const dataTypesToAdd = query
-        .slice(3)
-        .join(' ')
-        .split(',')
-
-    // remove leading and trailing parenthesis.
-    dataTypesToAdd[0] = dataTypesToAdd[0].slice(1)
-    dataTypesToAdd[dataTypesToAdd.length - 1] = dataTypesToAdd[
-        dataTypesToAdd.length - 1
-    ].slice(0, -1)
+    // removing "create table <TABLENAME>"
+    const dataTypesToAdd = query.slice(3)
 
     console.log('dataTypesToAdd', dataTypesToAdd)
 
-    dataTypesToAdd.forEach(element => {
-        element = element.replace(/\r?\n|\r/g, '')
-        const values = element.split(' ').filter(val => val)
-        const dataParam = values[0]
-        const type = values[1]
+    for (let index = 0; index < dataTypesToAdd.length; index += 2) {
+        const key = dataTypesToAdd[index]
+        const val = dataTypesToAdd[index + 1]
 
-        db[name]['DataTypes'][dataParam] = type
-        db[name][dataParam] = []
-    })
+        db[name]['DataTypes'][key] = val
+        db[name][key] = []
+    }
 
     console.log(
         '%cDB Now:',
@@ -197,40 +186,39 @@ function createTable(query) {
     )
 }
 function updateTable(query) {
-    // "UPDATE TABLE1 SET users = 'Alfred Schmidt', places = 'Frankfurt' WHERE id = 1;"
-    // console.log('update', query)
+    const prompt = `
+UPDATE EXAMPLETABLE1 SET users = 'Alfred Schmidt', places = 'Frankfurt' WHERE id = 1
+`
     const tableName = getTableName(query)
     const wherePlace = getIndexOfString('where', query)
     if (wherePlace === -1) {
         console.error("cannot find 'where' in query")
+        throw 'cannot find "where" in query'
     }
-    const sliced = query.slice(3, wherePlace).join(' ')
+    const sliced = query.slice(3, wherePlace)
 
+    console.log('sliced:', sliced)
     const whereToSlice = query.slice(wherePlace + 1).join(' ')
+    console.log('whereToSlice:', whereToSlice)
     const whereToSliceColumnName = whereToSlice.split('=')[0].trim()
 
+    console.log('whereToSliceColumnName:', whereToSliceColumnName)
     // Assuming a number
     let whereToSlicePlace = whereToSlice
         .split('=')[1]
         .replace(/'/gm, '')
         .trim()
 
-    sliced.split(',').forEach(element => {
-        const column = element
-            .split('=')[0]
-            .trim()
-            .toLowerCase()
-        const replacement = element
-            .split('=')[1]
-            .replace(/'/gm, '')
-            .trim()
-        if (isNaN(whereToSlicePlace)) {
-            whereToSlicePlace = db[tableName][whereToSliceColumnName].indexOf(
-                whereToSlicePlace
-            )
-        }
-        db[tableName][column][whereToSlicePlace] = replacement
-    })
+    for (let index = 0; index < sliced.length; index += 3) {
+        const key = sliced[index]
+        const val = sliced[index + 2]
+
+        console.log(db[tableName.toUpperCase()][key][whereToSlicePlace])
+        db[tableName.toUpperCase()][key][whereToSlicePlace] = val
+        // console.log(db[tableName.toUpperCase()][column])
+        // console.log(db[tableName.toUpperCase()][column][whereToSlicePlace])
+    }
+
 
     console.log(
         '%cDB Now:',
@@ -253,24 +241,36 @@ function insertTable(query) {
      */
 
     const tableName = query[2]
-    // const valuesPlace = query.indexOf('VALUES')
     const valuesPlace = getIndexOfString('values', query)
+
     if (valuesPlace === -1) {
         console.error("cannot find 'values' in query")
+        throw 'cannot find values in query'
     }
-    // if(values)TODO: make values not necessarily upper case
-    // const sliced = query.slice(3, wherePlace).join(' ')
 
     const keysArray = query.slice(3, valuesPlace)
     const valsArray = query.slice(valuesPlace + 1)
 
-    const newKeys = removeParens(keysArray)
-    const newVals = removeParens(valsArray)
+    console.log(keysArray, valsArray)
 
-    newKeys.forEach((element, index) => {
-        console.log(db[tableName.toUpperCase()][element])
-        db[tableName.toUpperCase()][element].push(newVals[index])
-    })
+    for (let index = 0; index < keysArray.length; index++) {
+        const key = keysArray[index]
+        const val = valsArray[index]
+        console.log(key, val)
+
+        console.log(tableName)
+        console.log(db[tableName.toUpperCase()])
+        console.log(db[tableName.toUpperCase()][key])
+        db[tableName.toUpperCase()][key].push(val)
+    }
+
+    // const newKeys = removeParens(keysArray)
+    // const newVals = removeParens(valsArray)
+
+    // newKeys.forEach((element, index) => {
+    //     console.log(db[tableName.toUpperCase()][element])
+    //     db[tableName.toUpperCase()][element].push(newVals[index])
+    // })
     console.log(
         '%cDB Now:',
         'background: #222; color: #bada55; font-size:1.5rem;',
@@ -308,11 +308,7 @@ function removeParens(input) {
 
 export function getTable(input) {
     const query = splitStrings(input)
-    const final = query
-        .join(' ')
-        .toUpperCase()
-        .split(' ')
-        .indexOf('FROM')
+    const final = getIndexOfString('from', query)
 
     const currentTable = query[final + 1]
     let table = {}

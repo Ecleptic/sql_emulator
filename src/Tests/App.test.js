@@ -82,32 +82,55 @@ WHERE Country='Mexico'`)
             '=',
             'Mexico'
         ])
+        expect(splitStrings(`select * from *`)).toEqual([
+            'select',
+            '*',
+            'from',
+            '*'
+        ])
+        expect(
+            splitStrings(`UPDATE Customers
+    SET ContactName='Juan'`)
+        ).toEqual(['UPDATE', 'Customers', 'SET', 'ContactName', '=', 'Juan'])
+        expect(
+            splitStrings(
+                `SELECT column1, column2 FROM table_name WHERE condition1 AND condition2 AND condition3`
+            )
+        ).toEqual([
+            'SELECT',
+            'column1',
+            'column2',
+            'FROM',
+            'table_name',
+            'WHERE',
+            'condition1',
+            'AND',
+            'condition2',
+            'AND',
+            'condition3'
+        ])
+        expect(
+            splitStrings(`CREATE TABLE Persons (
+        PersonID int,
+        LastName varchar(255),
+        FirstName varchar(255),
+        Address varchar(255),
+        City varchar(255)
+    )`)
+        ).toEqual([
+            'CREATE',
+            'TABLE',
+            'Persons',
+            'PersonID',
+            'int',
+            'LastName',
+            'varchar(255)',
+            'FirstName',
+            'varchar(255)',
+            'Address',
+            'varchar(255)',
+            'City',
+            'varchar(255)'
+        ])
     })
-    expect(splitStrings(`select * from *`)).toEqual([
-        'select',
-        '*',
-        'from',
-        '*'
-    ])
-    expect(
-        splitStrings(`UPDATE Customers
-SET ContactName='Juan'`)
-    ).toEqual(['UPDATE', 'Customers', 'SET', 'ContactName', '=', 'Juan'])
-    expect(
-        splitStrings(
-            `SELECT column1, column2 FROM table_name WHERE condition1 AND condition2 AND condition3`
-        )
-    ).toEqual([
-        'SELECT',
-        'column1',
-        'column2',
-        'FROM',
-        'table_name',
-        'WHERE',
-        'condition1',
-        'AND',
-        'condition2',
-        'AND',
-        'condition3'
-    ])
 })

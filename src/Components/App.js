@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 import MyTable from './MyTable'
 import parse, { getDbFromParser, getTable } from '../Scripts/parser'
-import { isSelect, getTableName,splitStrings } from '../Scripts/utilityFuncs'
+import { isSelect, getTableName, splitStrings } from '../Scripts/utilityFuncs'
 
 const TextArea = styled.textarea`
     /* display: flex; */
@@ -86,13 +86,28 @@ export default class App extends Component {
                 <div>
                     <h3>Currently Supported Commands:</h3>
                     <ul>
-                        <li>create</li>
-                        <li>delete</li>
-                        <li>drop</li>
-                        <li>select</li>
-                        <li>truncate</li>
-                        <li>update</li>
-                        <li>insert</li>
+                        <li>create table</li>
+                        {/* <li>delete</li> */}
+                        {/* <li>drop</li> */}
+                        <li>
+                            select
+                            <ul>
+                                <li>- Can't add parameters yet ☹️</li>
+                            </ul>
+                        </li>
+                        {/* <li>truncate</li> */}
+                        <li>
+                            update
+                            <ul>
+                                <li>- Currently can only update on ID</li>
+                            </ul>
+                        </li>
+                        <li>
+                            insert
+                            <ul>
+                                <li>- Only with values keyword</li>
+                            </ul>
+                        </li>
                     </ul>
                     <h3>Please separate every word with a space</h3>
                 </div>
@@ -108,7 +123,9 @@ export default class App extends Component {
                         try {
                             if (isSelect(this.state.sqlInput)) {
                                 const data = getTable(this.state.sqlInput)
-                                const table = getTableName(splitStrings(this.state.sqlInput))
+                                const table = getTableName(
+                                    splitStrings(this.state.sqlInput)
+                                )
                                 const viewedInfo = { data, table }
                                 this.setState({ viewedInfo })
                             } else {
