@@ -88,7 +88,7 @@ export default class App extends Component {
                     <ul>
                         <li>create table</li>
                         {/* <li>delete</li> */}
-                        {/* <li>drop</li> */}
+                        <li>drop</li>
                         <li>
                             select
                             <ul>
