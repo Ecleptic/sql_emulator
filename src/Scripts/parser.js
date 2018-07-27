@@ -88,10 +88,18 @@ export default function parse(input) {
 }
 function deleteTable(query) {
     // DELETE FROM `TABLENAME` WHERE `CONDITION`;
+    /**
+
+    delete from EXAMPLETABLE1 where id = 1
+
+    delete * from EXAMPLETABLE1
+
+     */
     const tableName = getTableName(query)
     const wherePlace = getIndexOfString('where', query)
     if (wherePlace === -1) {
         console.error("cannot find 'where' in query")
+        throw "cannot find 'where' in query"
     }
     // const sliced = query.slice(3, wherePlace).join(' ')
 
@@ -215,10 +223,7 @@ UPDATE EXAMPLETABLE1 SET users = 'Alfred Schmidt', places = 'Frankfurt' WHERE id
 
         console.log(db[tableName.toUpperCase()][key][whereToSlicePlace])
         db[tableName.toUpperCase()][key][whereToSlicePlace] = val
-        // console.log(db[tableName.toUpperCase()][column])
-        // console.log(db[tableName.toUpperCase()][column][whereToSlicePlace])
     }
-
 
     console.log(
         '%cDB Now:',
