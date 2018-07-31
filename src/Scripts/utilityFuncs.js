@@ -1,12 +1,15 @@
 'use-strict'
 
 export function getTableName(query) {
-        const fromPlace = query
-        .join(' ')
-        .toUpperCase()
-        .split(' ')
-        .indexOf('FROM')
-    const tableName = fromPlace !== -1 ? query[fromPlace + 1] : query[1]
+    const fromIndex = getIndexOfString('from', query)
+    const intoIndex = getIndexOfString('into', query)
+
+    const tableName =
+        fromIndex !== -1 // if not negative 1, it exists
+            ? query[fromIndex + 1]
+            : intoIndex !== -1 // if not negative 1, it exists
+                ? query[intoIndex + 1]
+                : query[1]
 
     return tableName
 }
@@ -150,7 +153,7 @@ export function objectClone(obj) {
     return temp
 }
 
-function getAllIndexes(val, arr) {
+export function getAllIndexes(val, arr) {
     let indexes = []
     for (let i = 0; i < arr.length; i++) {
         if (arr[i].toLowerCase() === val.toLowerCase()) {

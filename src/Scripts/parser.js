@@ -73,7 +73,7 @@ export default function parse(input) {
         query
     )
     if (tokenList.includes(query[0].toUpperCase())) {
-        console.log('First Word:', query[0].toUpperCase())
+        // console.log('First Word:', query[0].toUpperCase())
         switch (query[0].toUpperCase()) {
             case 'CREATE':
                 createTable(query)
@@ -104,7 +104,34 @@ export default function parse(input) {
     }
     return db
 }
+
 function deleteTable(query) {
+    const unCasedTableName = getTableName(query)
+    const tableName = Object.keys(db).reduce(table => {
+        if (table.toLowerCase() === unCasedTableName.toLowerCase()) return table
+    })
+    const whereIndex = getIndexOfString('where', query)
+
+    const spliceHere = query[whereIndex + 3]
+
+
+    for (const key in db[tableName]) {
+        if (
+            db[tableName].hasOwnProperty(key) &&
+            Array.isArray(db[tableName][key])
+        ) {
+            const element = db[tableName][key]
+            db[tableName][key].splice(spliceHere, 1)
+        }
+    }
+    console.log(
+        '%cDB Now:',
+        'background: #222; color: #bada55; font-size:1.5rem;',
+        db
+    )
+}
+
+function oldDeleteTable(query) {
     // DELETE FROM `TABLENAME` WHERE `CONDITION`;
     /**
 
@@ -117,24 +144,17 @@ function deleteTable(query) {
     const tableName = Object.keys(db).reduce(table => {
         if (table.toLowerCase() === unCasedTableName.toLowerCase()) return table
     })
-     const wherePlace = getIndexOfString('where', query)
-    if (wherePlace === -1) {
+    const whereIndex = getIndexOfString('where', query)
+    if (whereIndex === -1) {
         console.error("cannot find 'where' in query")
         throw "cannot find 'where' in query"
     }
-    // const sliced = query.slice(3, wherePlace).join(' ')
 
-    const whereToSlice = query.slice(wherePlace + 1).join(' ')
+    const whereToSlice = query.slice(whereIndex + 1).join(' ')
     const whereToSliceColumnName = whereToSlice.split('=')[0].trim()
 
     // Assuming a number
-    let whereToSlicePlace = db[tableName][whereToSliceColumnName].indexOf(
-        whereToSlice
-            .split('=')[1]
-            .replace(/'/gm, '')
-            .trim()
-    )
-
+    let whereToSlicePlace = whereIndex + 3
     db[tableName][whereToSliceColumnName].splice(whereToSlicePlace, 1)
 
     console.log(
@@ -191,7 +211,6 @@ function createTable(query) {
     // removing "create table <TABLENAME>"
     const dataTypesToAdd = query.slice(3)
 
-    console.log('dataTypesToAdd', dataTypesToAdd)
 
     for (let index = 0; index < dataTypesToAdd.length; index += 2) {
         const key = dataTypesToAdd[index]
@@ -226,11 +245,11 @@ function updateTable(query) {
 
     const newTable = filterFromParams(
         paramValues,
-        db[tableName],
+        db[tableName.toUpperCase()],
         replacementValues
     )
 
-    db[tableName] = newTable
+    db[tableName.toUpperCase()] = newTable
 
     console.log(
         '%cDB Now:',
@@ -240,30 +259,37 @@ function updateTable(query) {
 }
 function insertTable(query) {
     const unCasedTableName = getTableName(query)
-    const tableName = Object.keys(db).reduce(table => {
-        if (table.toLowerCase() === unCasedTableName.toLowerCase()) return table
-    })
-    const valuesPlace = getIndexOfString('values', query)
+    const tableName = Object.keys(db).reduce(
+        table =>
+            table.toLowerCase() === unCasedTableName.toLowerCase()
+                ? table
+                : unCasedTableName
+    )
 
-    if (valuesPlace === -1) {
-        console.error("cannot find 'values' in query")
-        throw 'cannot find values in query'
-    }
+    const valuesIndex = getIndexOfString('values', query)
 
-    const keysArray = query.slice(3, valuesPlace)
-    const valsArray = query.slice(valuesPlace + 1)
+    if (valuesIndex === -1) {
+        //         const ok = `
+        //         INSERT INTO Persons (PersonID='1234', LastName='Erichsen', FirstName='Ted', Address='4006 Norway Drive', City='New York');
+        // `
+        for (let index = 3; index < query.length; index += 3) {
+            const key = query[index]
+            const val = query[index + 2]
+            // console.log('tablename', tableName)
+            db[tableName.toUpperCase()][key].push(val)
+        }
+    } else {
+        const keysArray = query.slice(3, valuesIndex)
+        const valsArray = query.slice(valuesIndex + 1)
 
-    console.log(keysArray, valsArray)
+        // console.log(keysArray, valsArray)
 
-    for (let index = 0; index < keysArray.length; index++) {
-        const key = keysArray[index]
-        const val = valsArray[index]
-        console.log(key, val)
+        for (let index = 0; index < keysArray.length; index++) {
+            const key = keysArray[index]
+            const val = valsArray[index]
 
-        console.log(tableName)
-        console.log(db[tableName.toUpperCase()])
-        console.log(db[tableName.toUpperCase()][key])
-        db[tableName.toUpperCase()][key].push(val)
+            db[tableName.toUpperCase()][key].push(val)
+        }
     }
 
     console.log(
@@ -291,12 +317,7 @@ function removeParens(input) {
         input[input.length - 1] = input[input.length - 1].slice(0, -1)
     }
 
-    // input = input.replace("(^')|('$)")
-
     input = input.join(' ').split(', ')
-    console.log(input)
-    // let clean = e.replace('/[.,s]/g', '')
-    // clean = e.replace('/[.,s]/g', '')
 
     return input
 }
@@ -315,15 +336,10 @@ export function getTable(input) {
                 bool: query[param + 1]
             }
             paramValues[query[param]] = obj
-            // console.log(paramValues)
-            // console.log(paramValues[query[param]])
-            // console.log(paramValues[query[param]].bool)
-            // console.log(paramValues[query[param]].val)
         }
     }
 
     const currentTable = query[fromIndex + 1].toUpperCase()
-    // console.log('currrenttable ', currentTable)
     let table = {}
     if (fromIndex < 2) {
         console.error('error, fromIndex < 2')
@@ -338,7 +354,6 @@ export function getTable(input) {
             let returnedTable = {}
             // parse out ID in return
             for (let tuple in table) {
-                // console.log(tuple)
                 if (table.hasOwnProperty(tuple) && tuple !== 'id') {
                     returnedTable[tuple] = table[tuple]
                 }

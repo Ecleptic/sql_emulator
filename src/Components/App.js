@@ -73,7 +73,12 @@ export default class App extends Component {
                     <h3>Currently Supported Commands:</h3>
                     <ul>
                         <li>create table</li>
-                        {/* <li>delete</li> */}
+                        <li>
+                            delete
+                            <ul>
+                                <li>- Can only delete on index in table</li>
+                            </ul>
+                        </li>
                         <li>drop</li>
                         <li>
                             select
@@ -94,54 +99,12 @@ export default class App extends Component {
                         <li>
                             insert
                             <ul>
-                                <li>- Only with values keyword</li>
+                                <li>- keys are still case sensitive</li>
                             </ul>
                         </li>
                     </ul>
                 </div>
-                <div>
-                    <h3>Example Commands:</h3>
-                    <ul>
-                        <li>
-                            <pre>
-                                CREATE TABLE Persons ( PersonID int, LastName
-                                varchar(255), FirstName varchar(255), Address
-                                varchar(255), City varchar(255) );
-                            </pre>
-                        </li>
-                        <li>
-                            <pre>
-                                INSERT INTO Persons (PersonID, LastName,
-                                FirstName, Address, City) VALUES (1234,
-                                'Erichsen', 'Ted', '4006 Norway Drive', 'New
-                                York');
-                            </pre>
-                        </li>
-                        <li>
-                            <pre>
-                                SELECT * from EXAMPLETABLE1 where USERS = Bing
-                            </pre>
-                        </li>
-                        <li>
-                            <pre>
-                                UPDATE EXAMPLETABLE1 SET users = 'Bugs' WHERE id
-                                >= 4
-                            </pre>
-                        </li>
-                        <li>
-                            <pre>
-                                UPDATE EXAMPLETABLE1 SET users = 'Alfred
-                                Schmidt', places = 'Frankfurt' WHERE id = 1
-                            </pre>
-                        </li>
-                        <li>
-                            <pre>
-                                UPDATE EXAMPLETABLE1 SET users = 'Bugs Bunny ',
-                                places = 'Albuquerque' WHERE users = 'Doctor'
-                            </pre>
-                        </li>
-                    </ul>
-                </div>
+
                 <TextArea
                     value={this.state.sqlInput}
                     onChange={event => {
@@ -200,6 +163,60 @@ export default class App extends Component {
                         <MyTable data={this.state.viewedInfo.data} />
                     </Fragment>
                 ) : null}
+
+                <div>
+                    <h3>Example Commands:</h3>
+                    <ul>
+                        <li>
+                            <pre>
+                                CREATE TABLE Persons ( PersonID int, LastName
+                                varchar(255), FirstName varchar(255), Address
+                                varchar(255), City varchar(255) );
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>
+                                INSERT INTO Persons (PersonID, LastName,
+                                FirstName, Address, City) VALUES (1234,
+                                'Erichsen', 'Ted', '4006 Norway Drive', 'New
+                                York');
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>
+                                INSERT INTO Persons (PersonID='1234',
+                                LastName='Erichsen', FirstName='Ted',
+                                Address='4006 Norway Drive', City='New York');
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>
+                                SELECT * from EXAMPLETABLE1 where USERS = Bing
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>
+                                UPDATE EXAMPLETABLE1 SET users = 'Bugs' WHERE id
+                                >= 4
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>
+                                UPDATE EXAMPLETABLE1 SET users = 'Alfred
+                                Schmidt', places = 'Frankfurt' WHERE id = 1
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>
+                                UPDATE EXAMPLETABLE1 SET users = 'Bugs Bunny ',
+                                places = 'Albuquerque' WHERE users = 'Doctor'
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>delete from exampletable1 where id = 1</pre>
+                        </li>
+                    </ul>
+                </div>
             </Container>
         )
     }

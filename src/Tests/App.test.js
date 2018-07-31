@@ -380,7 +380,6 @@ describe('correctly Filter values from parameters', () => {
             )
         ).toEqual(JSON.stringify(table3))
 
-        // UPDATE  SET ContactName = 'Alfred Schmidt', City = 'Frankfurt' WHERE CustomerID < 10;
         expect(
             filterFromParams(['id', '<', '4'], table, ['users', '=', 'Bugs'])
         ).toEqual(table4)
