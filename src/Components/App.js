@@ -6,11 +6,8 @@ import parse, { getDbFromParser, getTable } from '../Scripts/parser'
 import { isSelect, getTableName, splitStrings } from '../Scripts/utilityFuncs'
 
 const TextArea = styled.textarea`
-    /* display: flex; */
     width: 600px;
     height: 200px;
-    /* justify-self: center;
-    align-self: center; */
     font-size: 20px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
         Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -46,14 +43,6 @@ export default class App extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            tokens: {
-                CREATE: false,
-                DELETE: false,
-                DROP: false,
-                INSERT: false,
-                SELECT: false,
-                UPDATE: false
-            },
             sqlInput: '',
             sqlError: false,
             db: {},
@@ -70,9 +59,6 @@ export default class App extends Component {
                 switched: !prevState.switched
             }
         })
-        let truthyToken = {
-            ...this.state.tokens
-        }
     }
 
     render() {
@@ -99,7 +85,10 @@ export default class App extends Component {
                         <li>
                             update
                             <ul>
-                                <li>- Currently can only update on ID</li>
+                                <li>
+                                    - can't update off of multiple parameters
+                                </li>
+                                <li>- can't use booleans</li>
                             </ul>
                         </li>
                         <li>
@@ -109,7 +98,49 @@ export default class App extends Component {
                             </ul>
                         </li>
                     </ul>
-                    <h3>Please separate every word with a space</h3>
+                </div>
+                <div>
+                    <h3>Example Commands:</h3>
+                    <ul>
+                        <li>
+                            <pre>
+                                CREATE TABLE Persons ( PersonID int, LastName
+                                varchar(255), FirstName varchar(255), Address
+                                varchar(255), City varchar(255) );
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>
+                                INSERT INTO Persons (PersonID, LastName,
+                                FirstName, Address, City) VALUES (1234,
+                                'Erichsen', 'Ted', '4006 Norway Drive', 'New
+                                York');
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>
+                                SELECT * from EXAMPLETABLE1 where USERS = Bing
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>
+                                UPDATE EXAMPLETABLE1 SET users = 'Bugs' WHERE id
+                                >= 4
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>
+                                UPDATE EXAMPLETABLE1 SET users = 'Alfred
+                                Schmidt', places = 'Frankfurt' WHERE id = 1
+                            </pre>
+                        </li>
+                        <li>
+                            <pre>
+                                UPDATE EXAMPLETABLE1 SET users = 'Bugs Bunny ',
+                                places = 'Albuquerque' WHERE users = 'Doctor'
+                            </pre>
+                        </li>
+                    </ul>
                 </div>
                 <TextArea
                     value={this.state.sqlInput}
@@ -120,6 +151,9 @@ export default class App extends Component {
                 />
                 <SubmitButton
                     onClick={() => {
+                        this.setState({
+                            viewedInfo: {}
+                        })
                         try {
                             if (isSelect(this.state.sqlInput)) {
                                 const data = getTable(this.state.sqlInput)

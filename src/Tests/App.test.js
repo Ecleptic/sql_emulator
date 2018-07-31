@@ -1,7 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import App from '../Components/App'
-import { getIndexOfString, splitStrings } from '../Scripts/utilityFuncs'
+import {
+    getIndexOfString,
+    splitStrings,
+    filterFromParams
+} from '../Scripts/utilityFuncs'
 
 it('renders without crashing', () => {
     const div = document.createElement('div')
@@ -64,6 +68,23 @@ WHERE CustomerID = 1
             'CustomerID',
             '=',
             '1'
+        ])
+
+        expect(
+            splitStrings(
+                `UPDATE EXAMPLETABLE1 SET users = 'Bugs' WHERE id >= 4`
+            )
+        ).toEqual([
+            'UPDATE',
+            'EXAMPLETABLE1',
+            'SET',
+            'users',
+            '=',
+            'Bugs',
+            'WHERE',
+            'id',
+            '>=',
+            '4'
         ])
 
         expect(
@@ -132,5 +153,245 @@ WHERE Country='Mexico'`)
             'City',
             'varchar(255)'
         ])
+        expect(
+            splitStrings(`UPDATE EXAMPLETABLE1 SET users = 'Bugs Bunny ', places = '     Albuquerque' WHERE users = 'Doctor'
+`)
+        ).toEqual([
+            'UPDATE',
+            'EXAMPLETABLE1',
+            'SET',
+            'users',
+            '=',
+            'Bugs Bunny',
+            'places',
+            '=',
+            'Albuquerque',
+            'WHERE',
+            'users',
+            '=',
+            'Doctor'
+        ])
+    })
+})
+
+describe('correctly Filter values from parameters', () => {
+    const table = {
+        id: 1,
+        users: [
+            'Cameron',
+            'Green',
+            'Stian',
+            'Bing',
+            'Doctor',
+            'Keith',
+            'Cameron'
+        ],
+        places: [
+            'Boston',
+            'Dallas',
+            'New York',
+            'Seoul',
+            'Shanghai',
+            'Tokyo',
+            'Boston'
+        ],
+        DataTypes: {
+            users: 'STRING',
+            places: 'STRING'
+        }
+    }
+    const table1 = {
+        id: 1,
+        users: [
+            'Cameron',
+            'Green',
+            'Stian',
+            'Bing',
+            'Bugs Bunny',
+            'Keith',
+            'Cameron'
+        ],
+        places: [
+            'Boston',
+            'Dallas',
+            'New York',
+            'Seoul',
+            'Albuquerque',
+            'Tokyo',
+            'Boston'
+        ],
+        DataTypes: {
+            users: 'STRING',
+            places: 'STRING'
+        }
+    }
+    const table2 = {
+        id: 1,
+        users: [
+            'Cameron',
+            'hello',
+            'Stian',
+            'Bing',
+            'Doctor',
+            'Keith',
+            'Cameron'
+        ],
+        places: [
+            'Boston',
+            'world',
+            'New York',
+            'Seoul',
+            'Shanghai',
+            'Tokyo',
+            'Boston'
+        ],
+        DataTypes: {
+            users: 'STRING',
+            places: 'STRING'
+        }
+    }
+    const table3 = {
+        id: 1,
+        users: [
+            'Bugs Bunny',
+            'Green',
+            'Stian',
+            'Bing',
+            'Doctor',
+            'Keith',
+            'Bugs Bunny'
+        ],
+        places: [
+            'Albuquerque',
+            'Dallas',
+            'New York',
+            'Seoul',
+            'Shanghai',
+            'Tokyo',
+            'Albuquerque'
+        ],
+        DataTypes: {
+            users: 'STRING',
+            places: 'STRING'
+        }
+    }
+    const table4 = {
+        id: 1,
+        users: ['Bugs', 'Bugs', 'Bugs', 'Bugs', 'Doctor', 'Keith', 'Cameron'],
+        places: [
+            'Boston',
+            'Dallas',
+            'New York',
+            'Seoul',
+            'Shanghai',
+            'Tokyo',
+            'Boston'
+        ],
+        DataTypes: {
+            users: 'STRING',
+            places: 'STRING'
+        }
+    }
+    const table5 = {
+        id: 1,
+        users: ['Bugs', 'Bugs', 'Bugs', 'Bugs', 'Bugs', 'Keith', 'Cameron'],
+        places: [
+            'Boston',
+            'Dallas',
+            'New York',
+            'Seoul',
+            'Shanghai',
+            'Tokyo',
+            'Boston'
+        ],
+        DataTypes: {
+            users: 'STRING',
+            places: 'STRING'
+        }
+    }
+    const table6 = {
+        id: 1,
+        users: ['Cameron', 'Green', 'Stian', 'Bing', 'Doctor', 'Bugs', 'Bugs'],
+        places: [
+            'Boston',
+            'Dallas',
+            'New York',
+            'Seoul',
+            'Shanghai',
+            'Tokyo',
+            'Boston'
+        ],
+        DataTypes: {
+            users: 'STRING',
+            places: 'STRING'
+        }
+    }
+    const table7 = {
+        id: 1,
+        users: ['Cameron', 'Green', 'Stian', 'Bing', 'Bugs', 'Bugs', 'Bugs'],
+        places: [
+            'Boston',
+            'Dallas',
+            'New York',
+            'Seoul',
+            'Shanghai',
+            'Tokyo',
+            'Boston'
+        ],
+        DataTypes: {
+            users: 'STRING',
+            places: 'STRING'
+        }
+    }
+
+    test('will return id/index correctly', () => {
+        expect(
+            filterFromParams(['id', '=', '1'], table, [
+                'users',
+                '=',
+                'hello',
+                'places',
+                '=',
+                'world'
+            ])
+        ).toEqual(table2)
+    })
+    test('will return users/object names correctly', () => {
+        expect(
+            filterFromParams(['users', '=', 'Doctor'], table, [
+                'users',
+                '=',
+                'Bugs Bunny',
+                'places',
+                '=',
+                'Albuquerque'
+            ])
+        ).toEqual(table1)
+        expect(
+            JSON.stringify(
+                filterFromParams(['users', '=', 'Cameron'], table, [
+                    'users',
+                    '=',
+                    'Bugs Bunny',
+                    'places',
+                    '=',
+                    'Albuquerque'
+                ])
+            )
+        ).toEqual(JSON.stringify(table3))
+
+        // UPDATE  SET ContactName = 'Alfred Schmidt', City = 'Frankfurt' WHERE CustomerID < 10;
+        expect(
+            filterFromParams(['id', '<', '4'], table, ['users', '=', 'Bugs'])
+        ).toEqual(table4)
+        expect(
+            filterFromParams(['id', '<=', '4'], table, ['users', '=', 'Bugs'])
+        ).toEqual(table5)
+        expect(
+            filterFromParams(['id', '>', '4'], table, ['users', '=', 'Bugs'])
+        ).toEqual(table6)
+        expect(
+            filterFromParams(['id', '>=', '4'], table, ['users', '=', 'Bugs'])
+        ).toEqual(table7)
     })
 })
